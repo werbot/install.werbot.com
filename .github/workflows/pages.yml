@@ -33,7 +33,7 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v2
       - name: Rename file 
-        run: mv index.sh index
+        run: cp index.sh index.md
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
         with:
