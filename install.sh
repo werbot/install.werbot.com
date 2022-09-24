@@ -12,7 +12,14 @@ RED=$(tput setaf 1)
 GREEN=$(tput setaf 2)
 RESET=$(tput sgr0)
 
-banner() {
+OS=$(uname -s)
+case "$OS" in
+Linux) OS=linux ;;
+Darwin) OS=darwin ;;
+*) err "Error: unsupported operating system: $OS" ;;
+esac
+
+install() {
   echo "${RED}"
   echo " _    _  ____  ____  ____  _____  ____"
   echo "( \\/\\/ )( ___)(  _ \\(  _ \\(  _  )(_  _)"
@@ -21,10 +28,23 @@ banner() {
   echo "${RESET}"
   echo "Install Enterprise version"
   echo "------------------------------------------------"
-}
 
-install() {
-  banner
+  # install docker
+  command -v docker >/dev/null 2>&1 || {
+    sudo apt install apt-transport-https ca-certificates curl software-properties-common &&
+      curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - &&
+      sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" &&
+      sudo apt-get update &&
+      sudo apt-get install -y docker-ce
+  }
+
+  # install docker-compose
+  command -v docker-compose >/dev/null 2>&1 || {
+    sudo curl -L https://github.com/docker/compose/releases/download/$(curl -s "https://api.github.com/repos/docker/compose/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose &&
+      sudo chmod +x /usr/local/bin/docker-compose
+  }
+
+  echo $OS
 }
 
 err() {
