@@ -8,6 +8,9 @@
 
 set -u
 
+APP_CDN="https://app.werbot.com"
+LICENSE_CDN="https://license.werbot.com"
+
 COLOR_GREY=$(tput setaf 0)
 COLOR_RED=$(tput setaf 1)
 COLOR_GREEN=$(tput setaf 2)
@@ -94,7 +97,7 @@ install() {
   # Installing jq
   print_header "Checking install jq"
   command_exists jq || {
-    print_answer "INSTALLATION" yellow
+    print_answer "NEED INSTALLATION" yellow
     print_header "Installing jq"
     if [ "$OS" = darwin ]; then
       brew install jq >/dev/null 2>&1
@@ -112,7 +115,7 @@ install() {
   # Installing docker
   print_header "Checking install docker"
   command_exists docker || {
-    print_answer "INSTALLATION" yellow
+    print_answer "NEED INSTALLATION" yellow
     print_header "Installing docker"
     if [ "$OS" = darwin ]; then
       brew install docker >/dev/null 2>&1
@@ -129,7 +132,7 @@ install() {
   # Installing docker-compose
   print_header "Checking install docker-compose"
   command_exists docker-compose || {
-    print_answer "INSTALLATION" yellow
+    print_answer "NEED INSTALLATION" yellow
     print_header "Installing docker-compose"
     if [ "$OS" = darwin ]; then
       brew install docker-compose >/dev/null 2>&1
@@ -160,9 +163,13 @@ install() {
 
   # Create structure service
   print_header "Create structure service"
-  if [ ! -d "/home/werbot/service" ]; then
-    sudo su - werbot -c "mkdir -p /home/werbot/service"
-  fi
+  sudo su - werbot -c "git clone https://github.com/werbot/install.werbot.com.git /home/werbot/service/tmp" >/dev/null 2>&1
+  sudo su - werbot -c "mv /home/werbot/service/tmp/cfg/grafana /home/werbot/service/grafana" >/dev/null 2>&1
+  sudo su - werbot -c "mv /home/werbot/service/tmp/cfg/haproxy /home/werbot/service/haproxy" >/dev/null 2>&1
+  sudo su - werbot -c "mv /home/werbot/service/tmp/cfg/loki /home/werbot/service/loki" >/dev/null 2>&1
+  sudo su - werbot -c "mv /home/werbot/service/tmp/cfg/prometheus /home/werbot/service/prometheus" >/dev/null 2>&1
+  sudo su - werbot -c "mv /home/werbot/service/tmp/cfg/promtail /home/werbot/service/promtail" >/dev/null 2>&1
+  sudo rm -rf /home/werbot/service/tmp
   print_answer "SUCCESS" green
   # ------------------------------------------------
 
