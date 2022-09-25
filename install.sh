@@ -70,16 +70,16 @@ check_and_install() {
 
   # Installing jq
   print_header "Checking install jq"
-  command -v jq >/dev/null 2>&1 || {
+  command_exists jq || {
     alert "INSTALLATION"
     print_header "Installing jq"
     if [ "$OS" = darwin ]; then
-      brew install jq >/dev/null 2>&1
+      brew install jq
     elif [ "$OS" = linux ]; then
-      sudo curl -L https://github.com/stedolan/jq/releases/download/$(curl -s "https://api.github.com/repos/stedolan/jq/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')/jq-linux64 -o /usr/local/bin/jq >/dev/null 2>&1
-      sudo chmod +x /usr/local/bin/jq >/dev/null 2>&1
+      sudo curl -L https://github.com/stedolan/jq/releases/download/$(curl -s "https://api.github.com/repos/stedolan/jq/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')/jq-linux64 -o /usr/local/bin/jq
+      sudo chmod +x /usr/local/bin/jq
     fi
-    command -v jq >/dev/null 2>&1 || {
+    command_exists jq || {
       error "ERROR"
     }
   }
@@ -88,15 +88,15 @@ check_and_install() {
 
   # Installing docker
   print_header "Checking install docker"
-  command -v docker >/dev/null 2>&1 || {
+  command_exists docker || {
     alert "INSTALLATION"
     print_header "Installing docker"
     if [ "$OS" = darwin ]; then
-      brew install docker >/dev/null 2>&1
+      brew install docker
     elif [ "$OS" = linux ]; then
-      curl -sSf https://get.docker.com | sh >/dev/null 2>&1
+      curl -sSf https://get.docker.com | sh
     fi
-    command -v docker >/dev/null 2>&1 || {
+    command_exists docker || {
       error "ERROR"
     }
   }
@@ -105,16 +105,16 @@ check_and_install() {
 
   # Installing docker-compose
   print_header "Checking install docker-compose"
-  command -v docker-compose >/dev/null 2>&1 || {
+  command_exists docker-compose || {
     alert "INSTALLATION"
     print_header "Installing docker-compose"
     if [ "$OS" = darwin ]; then
       brew install docker-compose >/dev/null 2>&1
     elif [ "$OS" = linux ]; then
-      sudo curl -L https://github.com/docker/compose/releases/download/$(curl -s "https://api.github.com/repos/docker/compose/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose >/dev/null 2>&1
-      sudo chmod +x /usr/local/bin/docker-compose >/dev/null 2>&1
+      sudo curl -L https://github.com/docker/compose/releases/download/$(curl -s "https://api.github.com/repos/docker/compose/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
+      sudo chmod +x /usr/local/bin/docker-compose
     fi
-    command -v docker-compose >/dev/null 2>&1 || {
+    command_exists docker-compose command_exists || {
       error "ERROR"
     }
   }
@@ -133,7 +133,7 @@ install() {
   hello
   check_and_install
 
-  #get_ip
+  get_ip
 }
 
 install "$@" || exit 1
