@@ -90,11 +90,11 @@ check_and_install() {
   print_header "Checking install docker"
   command_exists docker || {
     alert "INSTALLATION"
-    print_header "Installing docker"
+    print_header "Installing docker rootless"
     if [ "$OS" = darwin ]; then
       brew install docker >/dev/null 2>&1
     elif [ "$OS" = linux ]; then
-      curl -sSf https://get.docker.com | sh >/dev/null 2>&1
+      curl -sSf https://get.docker.com/rootless | sh >/dev/null 2>&1
     fi
     command_exists docker || {
       error "ERROR"
