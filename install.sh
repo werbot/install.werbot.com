@@ -74,10 +74,10 @@ check_and_install() {
     alert "INSTALLATION"
     print_header "Installing jq"
     if [ "$OS" = darwin ]; then
-      brew install jq
+      brew install jq >/dev/null 2>&1
     elif [ "$OS" = linux ]; then
-      sudo curl -L https://github.com/stedolan/jq/releases/download/$(curl -s "https://api.github.com/repos/stedolan/jq/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')/jq-linux64 -o /usr/local/bin/jq
-      sudo chmod +x /usr/local/bin/jq
+      sudo curl -L https://github.com/stedolan/jq/releases/download/$(curl -s "https://api.github.com/repos/stedolan/jq/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')/jq-linux64 -o /usr/local/bin/jq >/dev/null 2>&1
+      sudo chmod +x /usr/local/bin/jq >/dev/null 2>&1
     fi
     command_exists jq || {
       error "ERROR"
@@ -92,9 +92,9 @@ check_and_install() {
     alert "INSTALLATION"
     print_header "Installing docker"
     if [ "$OS" = darwin ]; then
-      brew install docker
+      brew install docker >/dev/null 2>&1
     elif [ "$OS" = linux ]; then
-      curl -sSf https://get.docker.com | sh
+      curl -sSf https://get.docker.com | sh >/dev/null 2>&1
     fi
     command_exists docker || {
       error "ERROR"
@@ -111,8 +111,8 @@ check_and_install() {
     if [ "$OS" = darwin ]; then
       brew install docker-compose >/dev/null 2>&1
     elif [ "$OS" = linux ]; then
-      sudo curl -L https://github.com/docker/compose/releases/download/$(curl -s "https://api.github.com/repos/docker/compose/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
-      sudo chmod +x /usr/local/bin/docker-compose
+      sudo curl -L https://github.com/docker/compose/releases/download/$(curl -s "https://api.github.com/repos/docker/compose/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose >/dev/null 2>&1
+      sudo chmod +x /usr/local/bin/docker-compose >/dev/null 2>&1
     fi
     command_exists docker-compose command_exists || {
       error "ERROR"
