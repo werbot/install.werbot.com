@@ -8,13 +8,25 @@
 
 set -u
 
-RED=$(tput setaf 1)
-GREEN=$(tput setaf 2)
-YELLOW=$(tput setaf 3)
-RESET=$(tput sgr0)
+COLOR_RED=$(tput setaf 1)
+COLOR_GREEN=$(tput setaf 2)
+COLOR_YELLOW=$(tput setaf 3)
+COLOR_RESET=$(tput sgr0)
 
 command_exists() {
   command -v "$@" >/dev/null 2>&1
+}
+
+success() {
+  echo "${COLOR_GREEN}SUCCESS${COLOR_RESET}" >&2
+}
+
+alert() {
+  echo "${COLOR_YELLOW}$1${COLOR_RESET}" >&2
+}
+
+error() {
+  echo "${COLOR_RED}$1${COLOR_RESET}" >&2 && exit 1
 }
 
 print_header() {
@@ -22,12 +34,11 @@ print_header() {
 }
 
 hello() {
-  echo "${RED}"
-  echo " _    _  ____  ____  ____  _____  ____"
+  echo "${COLOR_RED} _    _  ____  ____  ____  _____  ____"
   echo "( \\/\\/ )( ___)(  _ \\(  _ \\(  _  )(_  _)"
   echo " )    (  )__)  )   / ) _ < )(_)(   )("
   echo "(__/\\__)(____)(_)\\_)(____/(_____) (__)"
-  echo "${RESET}"
+  echo "${COLOR_RESET}"
   echo "Install Enterprise version"
   echo "------------------------------------------------"
 }
@@ -42,23 +53,25 @@ check_and_install() {
   case "$OS" in
   Linux) OS=linux ;;
   Darwin) OS=darwin ;;
-  *) err "${RED}NOT SUPPORTED${RESET}" ;;
+  *) error "NOT SUPPORTED" ;;
   esac
-  echo "${GREEN}OK${RESET}"
+  success
+  # ------------------------------------------------
 
   # Checking CPU architecture
   print_header "Checking CPU architecture"
   CPU=$(uname -m)
   case "$CPU" in
   x86_64 | x86-64 | x64 | amd64) CPU=amd64 ;;
-  *) err "${RED}NOT SUPPORTED${RESET}" ;;
+  *) error "NOT SUPPORTED" ;;
   esac
-  echo "${GREEN}OK${RESET}"
+  success
+  # ------------------------------------------------
 
   # Installing jq
   print_header "Checking install jq"
   command -v jq >/dev/null 2>&1 || {
-    echo "${YELLOW}INSTALLATION${RESET}"
+    alert "INSTALLATION"
     print_header "Installing jq"
     if [ "$OS" = darwin ]; then
       brew install jq >/dev/null 2>&1
@@ -67,15 +80,16 @@ check_and_install() {
       sudo chmod +x /usr/local/bin/jq >/dev/null 2>&1
     fi
     command -v jq >/dev/null 2>&1 || {
-      err "${RED}ERROR${RESET}"
+      error "ERROR"
     }
   }
-  echo "${GREEN}OK${RESET}"
+  success
+  # ------------------------------------------------
 
   # Installing docker
   print_header "Checking install docker"
   command -v docker >/dev/null 2>&1 || {
-    echo "${YELLOW}INSTALLATION${RESET}"
+    alert "INSTALLATION"
     print_header "Installing docker"
     if [ "$OS" = darwin ]; then
       brew install docker >/dev/null 2>&1
@@ -83,15 +97,16 @@ check_and_install() {
       curl -sSf https://get.docker.com | sh >/dev/null 2>&1
     fi
     command -v docker >/dev/null 2>&1 || {
-      err "${RED}ERROR${RESET}"
+      error "ERROR"
     }
   }
-  echo "${GREEN}OK${RESET}"
+  success
+  # ------------------------------------------------
 
   # Installing docker-compose
   print_header "Checking install docker-compose"
   command -v docker-compose >/dev/null 2>&1 || {
-    echo "${YELLOW}INSTALLATION${RESET}"
+    alert "INSTALLATION"
     print_header "Installing docker-compose"
     if [ "$OS" = darwin ]; then
       brew install docker-compose >/dev/null 2>&1
@@ -100,10 +115,11 @@ check_and_install() {
       sudo chmod +x /usr/local/bin/docker-compose >/dev/null 2>&1
     fi
     command -v docker-compose >/dev/null 2>&1 || {
-      err "${RED}ERROR${RESET}"
+      error "ERROR"
     }
   }
-  echo "${GREEN}OK${RESET}"
+  success
+  # ------------------------------------------------
 }
 
 get_ip() {
@@ -117,11 +133,7 @@ install() {
   hello
   check_and_install
 
-  get_ip
-}
-
-err() {
-  echo "$1" >&2 && exit 1
+  #get_ip
 }
 
 install "$@" || exit 1
