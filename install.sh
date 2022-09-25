@@ -8,6 +8,7 @@
 
 set -u
 
+COLOR_GREY=$(tput setaf 0)
 COLOR_RED=$(tput setaf 1)
 COLOR_GREEN=$(tput setaf 2)
 COLOR_YELLOW=$(tput setaf 3)
@@ -18,29 +19,43 @@ command_exists() {
 }
 
 gen_password() {
-  echo $(tr -cd 'a-zA-Z0-9!#$%&()*+?@[]^_' </dev/urandom | fold -w 32 | head -n 1)
+  tr -cd 'a-zA-Z0-9!#$%&()*+?@[]^_' </dev/urandom |
+    fold -w 32 |
+    head -n 1
 }
 
-print_success() {
-  echo "${COLOR_GREEN}SUCCESS${COLOR_RESET}" >&2
-}
+print_answer() {
+  local COLOR="$COLOR_RESET"
+  for flag in "$@"; do
+    case $flag in
+    grey) COLOR=$COLOR_GREY ;;
+    green) COLOR=$COLOR_GREEN ;;
+    yellow) COLOR=$COLOR_YELLOW ;;
+    red) COLOR=$COLOR_RED ;;
+    esac
+  done
 
-print_alert() {
-  echo "${COLOR_YELLOW}$1${COLOR_RESET}" >&2
-}
-
-print_error() {
-  echo "${COLOR_RED}$1${COLOR_RESET}" >&2 && exit 1
+  echo "${COLOR}$1${COLOR_RESET}" >&2
 }
 
 print_header() {
   printf "%.45s " "$@ ........................................"
 }
 
+get_latest_release() {
+  curl --silent "https://api.github.com/repos/$1/releases/latest" |
+    grep '"tag_name":' |
+    sed -E 's/.*"([^"]+)".*/\1/'
+}
+
 get_ip() {
-  local IP=$(ip addr | egrep -o '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | egrep -v "^192\.168|^172\.1[6-9]\.|^172\.2[0-9]\.|^172\.3[0-2]\.|^10\.|^127\.|^255\.|^0\." | head -n 1)
+  local IP=$(ip addr |
+    egrep -o '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' |
+    egrep -v "^192\.168|^172\.1[6-9]\.|^172\.2[0-9]\.|^172\.3[0-2]\.|^10\.|^127\.|^255\.|^0\." |
+    head -n 1)
   [ -z ${IP} ] && IP=$(curl -s https://ipv4.icanhazip.com)
   [ -z ${IP} ] && IP=$(curl -s https://ipinfo.io/ip)
+  [ -z ${IP} ] && IP=$(curl -s https://ipv6.icanhazip.com)
   echo ${IP}
 }
 
@@ -60,9 +75,9 @@ install() {
   case "$OS" in
   Linux) OS=linux ;;
   Darwin) OS=darwin ;;
-  *) print_error "NOT SUPPORTED" ;;
+  *) print_answer "NOT SUPPORTED" && exit 1 ;;
   esac
-  print_success
+  print_answer "SUCCESS" green
   # ------------------------------------------------
 
   # Checking CPU architecture
@@ -71,33 +86,33 @@ install() {
   CPU=$(uname -m)
   case "$CPU" in
   x86_64 | x86-64 | x64 | amd64) CPU=amd64 ;;
-  *) print_error "NOT SUPPORTED" ;;
+  *) print_answer "NOT SUPPORTED" && exit 1 ;;
   esac
-  print_success
+  print_answer "SUCCESS" green
   # ------------------------------------------------
 
   # Installing jq
   print_header "Checking install jq"
   command_exists jq || {
-    print_alert "INSTALLATION"
+    print_answer "INSTALLATION" yellow
     print_header "Installing jq"
     if [ "$OS" = darwin ]; then
       brew install jq >/dev/null 2>&1
     elif [ "$OS" = linux ]; then
-      sudo curl -L https://github.com/stedolan/jq/releases/download/$(curl -s "https://api.github.com/repos/stedolan/jq/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')/jq-linux64 -o /usr/local/bin/jq >/dev/null 2>&1
-      sudo chmod +x /usr/local/bin/jq >/dev/null 2>&1
+      sudo curl -L https://github.com/stedolan/jq/releases/download/$(get_latest_release "stedolan/jq")/jq-linux64 -o /usr/local/bin/jq >/dev/null 2>&1
+      sudo chmod +x /usr/local/bin/jq
     fi
     command_exists jq || {
-      print_error "ERROR"
+      print_answer "ERROR" red
     }
   }
-  print_success
+  print_answer "SUCCESS" green
   # ------------------------------------------------
 
   # Installing docker
   print_header "Checking install docker"
   command_exists docker || {
-    print_alert "INSTALLATION"
+    print_answer "INSTALLATION" yellow
     print_header "Installing docker"
     if [ "$OS" = darwin ]; then
       brew install docker >/dev/null 2>&1
@@ -105,53 +120,53 @@ install() {
       curl -sSf https://get.docker.com | sh >/dev/null 2>&1
     fi
     command_exists docker || {
-      print_error "ERROR"
+      print_answer "ERROR" red
     }
   }
-  print_success
+  print_answer "SUCCESS" green
   # ------------------------------------------------
 
   # Installing docker-compose
   print_header "Checking install docker-compose"
   command_exists docker-compose || {
-    print_alert "INSTALLATION"
+    print_answer "INSTALLATION" yellow
     print_header "Installing docker-compose"
     if [ "$OS" = darwin ]; then
       brew install docker-compose >/dev/null 2>&1
     elif [ "$OS" = linux ]; then
-      sudo curl -L https://github.com/docker/compose/releases/download/$(curl -s "https://api.github.com/repos/docker/compose/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose >/dev/null 2>&1
-      sudo chmod +x /usr/local/bin/docker-compose >/dev/null 2>&1
+      sudo curl -L https://github.com/docker/compose/releases/download/$(get_latest_release "docker/compose")/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose >/dev/null 2>&1
+      sudo chmod +x /usr/local/bin/docker-compose
     fi
     command_exists docker-compose command_exists || {
-      print_error "ERROR"
+      print_answer "ERROR" red
     }
   }
-  print_success
+  print_answer "SUCCESS" green
   # ------------------------------------------------
 
   # Create new user
   if ! getent passwd werbot >/dev/null; then
     print_header "Adding a new werbot user"
-    sudo useradd -m -d /home/werbot werbot -s /bin/bash &>/dev/null
-    echo "werbot ALL=(ALL) NOPASSWD:ALL" | sudo tee -a /etc/sudoers.d/werbot >/dev/null
+    sudo useradd -m -d /home/werbot werbot -s /bin/bash
+    echo "werbot ALL=(ALL) NOPASSWD:ALL" | sudo tee -a /etc/sudoers.d/werbot >/dev/null 2>&1
     sudo chmod 0440 /etc/sudoers.d/werbot
     sudo usermod -a -G sudo werbot
-    sudo su - werbot -c "ssh-keygen -q -t ed25519 -N '' -f ~/.ssh/id_ed25519 <<<y" >/dev/null 2>&1
-    sudo usermod -aG docker werbot &>/dev/null
-    newgrp docker &>/dev/null
-    print_success
+    sudo su - werbot -c "ssh-keygen -q -t ed25519 -N '' -f ~/.ssh/id_ed25519 <<<y"
+    sudo usermod -aG docker werbot
+    # newgrp docker
+    print_answer "SUCCESS" green
   fi
   # ------------------------------------------------
 
   # Create structure service
   print_header "Create structure service"
-  if ! [ -d /home/werbot/service ]; then
-    sudo su - werbot -c "mkdir /home/werbot/service"
+  if [ ! -d "/home/werbot/service" ]; then
+    sudo su - werbot -c "mkdir -p /home/werbot/service"
   fi
-  print_success
+  print_answer "SUCCESS" green
   # ------------------------------------------------
 
-  get_ip
+  echo "My external ip: $(get_ip)"
 }
 
 install "$@" || exit 1
