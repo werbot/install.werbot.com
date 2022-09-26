@@ -73,12 +73,14 @@ get_ip() {
 }
 
 install() {
-  echo "${COLOR_RED} _    _  ____  ____  ____  _____  ____"
-  echo "( \\/\\/ )( ___)(  _ \\(  _ \\(  _  )(_  _)"
-  echo " )    (  )__)  )   / ) _ < )(_)(   )("
-  echo "(__/\\__)(____)(_)\\_)(____/(_____) (__)"
+  clear
+  echo "${COLOR_RED}                         _            _   "
+  echo "     _  _  _ _____  ____| |__   ___ _| |_ "
+  echo "    | || || | ___ |/ ___)  _ \ / _ (_   _)"
+  echo "    | || || | ____| |   | |_) ) |_| || |_ "
+  echo "     \_____/|_____)_|   |____/ \___/  \__)"
   echo "${COLOR_RESET}"
-  echo "Install Enterprise version"
+  echo "          Install Enterprise version"
   echo "------------------------------------------------"
 
   echo ""
@@ -92,7 +94,7 @@ install() {
   echo ""
   read -p "Have you set up DNS entries for your domain (y/n)? " user_answer
   case "$user_answer" in
-  "y") echo "" ;;
+  "y" | "Y") echo "" ;;
   *) exit ;;
   esac
 
