@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
 # Copyright (c) 2022 Werbot, Inc.
 
@@ -6,15 +6,24 @@
 # https://install.werbot.com in order to install the Werbot
 # command-line tools and all Werbot components.
 
-set -u
+set -e
 
-APP_CDN="https://app.werbot.com"
-LICENSE_CDN="https://license.werbot.com"
+if readlink /proc/$$/exe | grep -q "dash"; then
+  echo 'This installer needs to be run with "bash", not "sh".'
+  exit
+fi
 
+# Main settings
+APP_CDN=${APP_CDN:-"https://app.werbot.com"}
+LICENSE_CDN=${LICENSE_CDN:-"https://license.werbot.com"}
+
+# Service settings
 DOMAIN=${DOMAIN:-}
+GEOLITE_DATABASE=${GEOLITE_DATABASE:-"https://install.werbot.com/GeoLite2-Country.mmdb"}
 CLOUDFLARE_EMAIL=${CLOUDFLARE_EMAIL:-}
 CLOUDFLARE_API_KEY=${CLOUDFLARE_API_KEY:-}
 
+# Global setting
 COLOR_GREY=$(tput setaf 0)
 COLOR_RED=$(tput setaf 1)
 COLOR_GREEN=$(tput setaf 2)
@@ -41,7 +50,6 @@ print_answer() {
     red) COLOR=$COLOR_RED ;;
     esac
   done
-
   echo "${COLOR}$1${COLOR_RESET}" >&2
 }
 
@@ -75,14 +83,6 @@ install() {
   echo "Install Enterprise version"
   echo "------------------------------------------------"
 
-  for flag in "$@"; do
-    case $flag in
-    domain=?*) DOMAIN=${1#*=} ;;
-    cloudflare_email=?*) CLOUDFLARE_EMAIL=${1#*=} ;;
-    cloudflare_api_key=?*) CLOUDFLARE_API_KEY=${1#*=} ;;
-    esac
-  done
-
   echo ""
   echo "To begin the installation, you must set up DNS records"
   echo "for your domain. Detailed information on how to do"
@@ -92,39 +92,34 @@ install() {
   echo "This is required to issue an SSL certificate."
   echo "After installation, you can install your certificate.${COLOR_RESET}"
   echo ""
-  printf "Have you set up DNS entries for your domain (y/n)? "
-  read -r user_answer
-  if echo "$user_answer" | grep -iq "^y"; then
-    echo ""
-  else
-    exit
-  fi
+  read -p "Have you set up DNS entries for your domain (y/n)? " user_answer
+  case "$user_answer" in
+  "y") echo "" ;;
+  *) exit ;;
+  esac
 
   # Domain parameters
-  if [ -z "${DOMAIN}" ]; then
-    printf "Domain name: "
-    read -r DOMAIN
-    if [ -z "$(echo $DOMAIN | grep -P '(?=^.{1,254}$)(^(?>(?!\d+\.)[a-zA-Z0-9_\-]{1,63}\.?)+(?:[a-zA-Z]{2,})$)')" ]; then
+  if [[ -z "$(echo $DOMAIN | grep -P '(?=^.{1,254}$)(^(?>(?!\d+\.)[a-zA-Z0-9_\-]{1,63}\.?)+(?:[a-zA-Z]{2,})$)')" ]]; then
+    read -rp "Domain name: " -e -i "${DOMAIN}" DOMAIN
+    if [[ -z "$(echo $DOMAIN | grep -P '(?=^.{1,254}$)(^(?>(?!\d+\.)[a-zA-Z0-9_\-]{1,63}\.?)+(?:[a-zA-Z]{2,})$)')" ]]; then
       echo "$DOMAIN is not validate domain"
       exit
     fi
   fi
 
   # Cloudflare email parameters
-  if [ -z "${CLOUDFLARE_EMAIL}" ]; then
-    printf "Cloudflare email: "
-    read -r CLOUDFLARE_EMAIL
-    if [ -z "$(echo $CLOUDFLARE_EMAIL | grep -P '(^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$)')" ]; then
+  if [[ -z "$(echo $CLOUDFLARE_EMAIL | grep -P '(^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$)')" ]]; then
+    read -rp "Cloudflare email: " -e -i "${CLOUDFLARE_EMAIL}" CLOUDFLARE_EMAIL
+    if [[ -z "$(echo $CLOUDFLARE_EMAIL | grep -P '(^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$)')" ]]; then
       echo "$CLOUDFLARE_EMAIL is not validate email"
       exit
     fi
   fi
 
   # Cloudflare API key parameters
-  if [ -z "${CLOUDFLARE_API_KEY}" ]; then
-    printf "Cloudflare API key: "
-    read -r CLOUDFLARE_API_KEY
-    if [ -z "$(echo $CLOUDFLARE_API_KEY | grep -P '(^.{37}$)')" ]; then
+  if [[ -z "$(echo $CLOUDFLARE_API_KEY | grep -P '(^.{37}$)')" ]]; then
+    read -rp "Cloudflare API key: " -e -i "${CLOUDFLARE_API_KEY}" CLOUDFLARE_API_KEY
+    if [[ -z "$(echo $CLOUDFLARE_API_KEY | grep -P '(^.{37}$)')" ]]; then
       echo "$CLOUDFLARE_API_KEY is not validate API key"
       exit
     fi
@@ -245,7 +240,7 @@ install() {
 
   # TODO: create /home/werbot/service/.env
 
-  sudo su - werbot -c "curl -s -o /home/werbot/service/core/GeoLite2-Country.mmdb https://install.werbot.com/GeoLite2-Country.mmdb"
+  sudo su - werbot -c "curl -s -o /home/werbot/service/core/GeoLite2-Country.mmdb $GEOLITE_DATABASE"
 
   # TODO: update domain /home/werbot/service/haproxy/config.cfg
   # TODO: download /home/werbot/service/docker-compose.yaml
