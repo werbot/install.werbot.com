@@ -11,6 +11,10 @@ set -u
 APP_CDN="https://app.werbot.com"
 LICENSE_CDN="https://license.werbot.com"
 
+DOMAIN=${DOMAIN:-}
+CLOUDFLARE_EMAIL=${CLOUDFLARE_EMAIL:-}
+CLOUDFLARE_API_KEY=${CLOUDFLARE_API_KEY:-}
+
 COLOR_GREY=$(tput setaf 0)
 COLOR_RED=$(tput setaf 1)
 COLOR_GREEN=$(tput setaf 2)
@@ -70,6 +74,61 @@ install() {
   echo "${COLOR_RESET}"
   echo "Install Enterprise version"
   echo "------------------------------------------------"
+
+  for flag in "$@"; do
+    case $flag in
+    domain=?*) DOMAIN=${1#*=} ;;
+    cloudflare_email=?*) CLOUDFLARE_EMAIL=${1#*=} ;;
+    cloudflare_api_key=?*) CLOUDFLARE_API_KEY=${1#*=} ;;
+    esac
+  done
+
+  echo ""
+  echo "To begin the installation, you must set up DNS records"
+  echo "for your domain. Detailed information on how to do"
+  echo "this is on the page https://werbot.com/doc/install."
+  echo ""
+  echo "${COLOR_RED}We currently only support DNS provider Cloudflare."
+  echo "This is required to issue an SSL certificate."
+  echo "After installation, you can install your certificate.${COLOR_RESET}"
+  echo ""
+  printf "Have you set up DNS entries for your domain (y/n)? "
+  read -r user_answer
+  if echo "$user_answer" | grep -iq "^y"; then
+    echo ""
+  else
+    exit
+  fi
+
+  # Domain parameters
+  if [ -z "${DOMAIN}" ]; then
+    printf "Domain name: "
+    read -r DOMAIN
+    if [ -z "$(echo $DOMAIN | grep -P '(?=^.{1,254}$)(^(?>(?!\d+\.)[a-zA-Z0-9_\-]{1,63}\.?)+(?:[a-zA-Z]{2,})$)')" ]; then
+      echo "$DOMAIN is not validate domain"
+      exit
+    fi
+  fi
+
+  # Cloudflare email parameters
+  if [ -z "${CLOUDFLARE_EMAIL}" ]; then
+    printf "Cloudflare email: "
+    read -r CLOUDFLARE_EMAIL
+    if [ -z "$(echo $CLOUDFLARE_EMAIL | grep -P '(^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$)')" ]; then
+      echo "$CLOUDFLARE_EMAIL is not validate email"
+      exit
+    fi
+  fi
+
+  # Cloudflare API key parameters
+  if [ -z "${CLOUDFLARE_API_KEY}" ]; then
+    printf "Cloudflare API key: "
+    read -r CLOUDFLARE_API_KEY
+    if [ -z "$(echo $CLOUDFLARE_API_KEY | grep -P '(^.{37}$)')" ]; then
+      echo "$CLOUDFLARE_API_KEY is not validate API key"
+      exit
+    fi
+  fi
 
   # Checking operating system
   local OS
@@ -159,7 +218,7 @@ install() {
     # newgrp docker
     print_answer "SUCCESS" green
   fi
-  # ------------------------------------------------mkdir
+  # ------------------------------------------------
 
   # Create structure service
   print_header "Create structure service"
