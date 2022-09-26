@@ -32,12 +32,12 @@ jobs:
         uses: actions/checkout@v3
       - name: Setup Pages
         uses: actions/configure-pages@v2
-      - name: Rename file 
-        run: cp install.sh index.html
+      - name: Make dist 
+        run: make dist GEOLITE_LICENSE=${{ secrets.GEOLITE_LICENSE }}
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
         with:
-          path: '.'
+          path: './dist/'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v1

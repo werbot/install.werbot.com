@@ -106,7 +106,7 @@ install() {
       sudo chmod +x /usr/local/bin/jq
     fi
     command_exists jq || {
-      print_answer "ERROR" red
+      print_answer "ERROR" red && exit 1
     }
   }
   print_answer "SUCCESS" green
@@ -123,7 +123,7 @@ install() {
       curl -sSf https://get.docker.com | sh >/dev/null 2>&1
     fi
     command_exists docker || {
-      print_answer "ERROR" red
+      print_answer "ERROR" red && exit 1
     }
   }
   print_answer "SUCCESS" green
@@ -141,7 +141,7 @@ install() {
       sudo chmod +x /usr/local/bin/docker-compose
     fi
     command_exists docker-compose command_exists || {
-      print_answer "ERROR" red
+      print_answer "ERROR" red && exit 1
     }
   }
   print_answer "SUCCESS" green
@@ -159,17 +159,46 @@ install() {
     # newgrp docker
     print_answer "SUCCESS" green
   fi
-  # ------------------------------------------------
+  # ------------------------------------------------mkdir
 
   # Create structure service
   print_header "Create structure service"
+
   sudo su - werbot -c "git clone https://github.com/werbot/install.werbot.com.git /home/werbot/service/tmp" >/dev/null 2>&1
   sudo su - werbot -c "mv /home/werbot/service/tmp/cfg/grafana /home/werbot/service/grafana" >/dev/null 2>&1
   sudo su - werbot -c "mv /home/werbot/service/tmp/cfg/haproxy /home/werbot/service/haproxy" >/dev/null 2>&1
   sudo su - werbot -c "mv /home/werbot/service/tmp/cfg/loki /home/werbot/service/loki" >/dev/null 2>&1
   sudo su - werbot -c "mv /home/werbot/service/tmp/cfg/prometheus /home/werbot/service/prometheus" >/dev/null 2>&1
   sudo su - werbot -c "mv /home/werbot/service/tmp/cfg/promtail /home/werbot/service/promtail" >/dev/null 2>&1
+
+  sudo su - werbot -c "mkdir -p /home/werbot/service/{core,postgres,postgres/ca}"
+
+  sudo su - werbot -c "cd /home/werbot/service/postgres/ca/
+    openssl req -new -text -passout pass:abcd -subj /CN=Werbot -out server.req -keyout privkey.pem
+    openssl rsa -in privkey.pem -passin pass:abcd -out server.key
+    openssl req -x509 -in server.req -text -key server.key -out server.crt
+    chmod 600 server.key
+    sudo chown 70 server.key" >/dev/null 2>&1
+
+  sudo su - werbot -c "ssh-keygen -q -t rsa -b 4096 -N '' -f /home/werbot/service/core/server_key <<<y
+    rm /home/werbot/service/core/server_key.pub
+    chmod 664 /home/werbot/service/core/server_key" >/dev/null 2>&1
+
+  # TODO: create /home/werbot/service/.env
+
+  sudo su - werbot -c "curl -s -o /home/werbot/service/core/GeoLite2-Country.mmdb https://install.werbot.com/GeoLite2-Country.mmdb"
+
+  # TODO: update domain /home/werbot/service/haproxy/config.cfg
+  # TODO: download /home/werbot/service/docker-compose.yaml
+
+  sudo chown 10001:10001 /home/werbot/service/core/
   sudo rm -rf /home/werbot/service/tmp
+  print_answer "SUCCESS" green
+  # ------------------------------------------------
+
+  # Pulling docker containers (~2min)
+  print_header "Pulling docker containers (~2min)"
+  # docker-compose -f /home/werbot/service/docker-compose.yaml pull >/dev/null 2>&1
   print_answer "SUCCESS" green
   # ------------------------------------------------
 
