@@ -6,8 +6,6 @@
 # https://install.werbot.com in order to install the Werbot
 # command-line tools and all Werbot components.
 
-{ # this ensures the entire script is downloaded #
-
 if readlink /proc/$$/exe | grep -q "dash"; then
   echo 'This installer needs to be run with "bash", not "sh".'
   exit
@@ -260,5 +258,3 @@ install() {
 }
 
 install "$@" || exit 1
-
-} # this ensures the entire script is downloaded #

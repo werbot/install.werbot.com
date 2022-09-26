@@ -1,5 +1,5 @@
 # install.werbot.com
 
 ```bash
-curl -sSf https://install.werbot.com | sh
+bash <(curl -L -Ss https://install.werbot.com)
 ```
