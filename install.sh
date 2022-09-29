@@ -102,7 +102,7 @@ install() {
   if [[ -z "$(echo $DOMAIN | grep -P '(?=^.{1,254}$)(^(?>(?!\d+\.)[a-zA-Z0-9_\-]{1,63}\.?)+(?:[a-zA-Z]{2,})$)')" ]]; then
     read -rp "Domain name: " -e -i "${DOMAIN}" DOMAIN
     if [[ -z "$(echo $DOMAIN | grep -P '(?=^.{1,254}$)(^(?>(?!\d+\.)[a-zA-Z0-9_\-]{1,63}\.?)+(?:[a-zA-Z]{2,})$)')" ]]; then
-      echo "$DOMAIN is not validate domain"
+      echo "${COLOR_RED}$DOMAIN is not validate domain${COLOR_RESET}"
       exit
     fi
   fi
@@ -111,7 +111,7 @@ install() {
   if [[ -z "$(echo $CLOUDFLARE_EMAIL | grep -P '(^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$)')" ]]; then
     read -rp "Cloudflare email: " -e -i "${CLOUDFLARE_EMAIL}" CLOUDFLARE_EMAIL
     if [[ -z "$(echo $CLOUDFLARE_EMAIL | grep -P '(^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$)')" ]]; then
-      echo "$CLOUDFLARE_EMAIL is not validate email"
+      echo "${COLOR_RED}$CLOUDFLARE_EMAIL is not validate email${COLOR_RESET}"
       exit
     fi
   fi
@@ -120,7 +120,7 @@ install() {
   if [[ -z "$(echo $CLOUDFLARE_API_KEY | grep -P '(^.{37}$)')" ]]; then
     read -rp "Cloudflare API key: " -e -i "${CLOUDFLARE_API_KEY}" CLOUDFLARE_API_KEY
     if [[ -z "$(echo $CLOUDFLARE_API_KEY | grep -P '(^.{37}$)')" ]]; then
-      echo "$CLOUDFLARE_API_KEY is not validate API key"
+      echo "${COLOR_RED}$CLOUDFLARE_API_KEY is not validate API key${COLOR_RESET}"
       exit
     fi
   fi
