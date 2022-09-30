@@ -11,7 +11,8 @@
 # bash <(wget -qO- https://install.werbot.com)
 #
 # Parameters:
-# --domain     - Main domain for work project. For this domain, you need to create DNS records CNAME type for api and app
+# --domain     - Main domain for work project. For this domain. 
+#                You need to create DNS records CNAME type for subdomain "api" and "app"
 # --geolite    - Link to update the GeoLite2-Country database
 # --cf-email   - Cloudflare email
 # --cf-api-key - Cloudflare API key
