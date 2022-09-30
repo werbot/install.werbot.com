@@ -1,10 +1,20 @@
 #!/usr/bin/env bash
 
 # Copyright (c) 2022 Werbot, Inc.
-
+#
 # This is a simple script that can be downloaded and run from
 # https://install.werbot.com in order to install the Werbot
 # command-line tools and all Werbot components.
+#
+# Run commands:
+# bash <(curl -L -Ss https://install.werbot.com)
+# bash <(wget -qO- https://install.werbot.com)
+#
+# Parameters:
+# --domain     - Main domain for work project. For this domain, you need to create DNS records CNAME type for api and app
+# --geolite    - Link to update the GeoLite2-Country database
+# --cf-email   - Cloudflare email
+# --cf-api-key - Cloudflare API key
 
 if readlink /proc/$$/exe | grep -q "dash"; then
   echo 'This installer needs to be run with "bash", not "sh".'
@@ -12,14 +22,14 @@ if readlink /proc/$$/exe | grep -q "dash"; then
 fi
 
 # Main settings
-APP_CDN=${APP_CDN:-"https://app.werbot.com"}
-LICENSE_CDN=${LICENSE_CDN:-"https://license.werbot.com"}
+APP_CDN="https://app.werbot.com"
+LICENSE_CDN="https://license.werbot.com"
 
 # Service settings
-DOMAIN=${DOMAIN:-}
-GEOLITE_DATABASE=${GEOLITE_DATABASE:-"https://install.werbot.com/GeoLite2-Country.mmdb"}
-CLOUDFLARE_EMAIL=${CLOUDFLARE_EMAIL:-}
-CLOUDFLARE_API_KEY=${CLOUDFLARE_API_KEY:-}
+DOMAIN=""
+GEOLITE_DATABASE="https://install.werbot.com/GeoLite2-Country.mmdb"
+CLOUDFLARE_EMAIL=""
+CLOUDFLARE_API_KEY=""
 
 # Global setting
 COLOR_GREY=$(tput setaf 0)
@@ -81,12 +91,34 @@ install() {
   echo "          Install Enterprise version"
   echo "---------------------------------------------"
 
+  # Check options
+  for flag in "$@"; do
+    case $flag in
+    --domain=*)
+      DOMAIN="${flag#*=}"
+      shift
+      ;;
+    --geolite=*)
+      GEOLITE_DATABASE="${flag#*=}"
+      shift
+      ;;
+    --cf-email=*)
+      CLOUDFLARE_EMAIL="${flag#*=}"
+      shift
+      ;;
+    --cf-api-key=*)
+      CLOUDFLARE_API_KEY="${flag#*=}"
+      shift
+      ;;
+    esac
+  done
+
   echo ""
   echo "To begin the installation, you must set up DNS records"
   echo "for your domain. Detailed information on how to do"
   echo "this is on the page https://werbot.com/doc/install."
   echo ""
-  echo "${COLOR_RED}We currently only support DNS provider Cloudflare."
+  echo "${COLOR_RED}Currently support only Cloudflare DNS provider."
   echo "This is required to issue an SSL certificate."
   echo "After installation, you can install your certificate.${COLOR_RESET}"
   echo ""
@@ -98,10 +130,8 @@ install() {
 
   # Domain parameters
   if [[ -z "$(echo $DOMAIN | grep -P '(?=^.{1,254}$)(^(?>(?!\d+\.)[a-zA-Z0-9_\-]{1,63}\.?)+(?:[a-zA-Z]{2,})$)')" ]]; then
-    read -rp "Domain name: " -e -i "${DOMAIN}" DOMAIN
+    read -rp "Domain name: " -i "${DOMAIN}" DOMAIN
     if [[ -z "$(echo $DOMAIN | grep -P '(?=^.{1,254}$)(^(?>(?!\d+\.)[a-zA-Z0-9_\-]{1,63}\.?)+(?:[a-zA-Z]{2,})$)')" ]]; then
-      print_answer "ERROR" red
-      echo ""
       echo "${COLOR_RED}$DOMAIN${COLOR_RESET} - is not validate domain"
       exit 1
     fi
@@ -111,8 +141,6 @@ install() {
   if [[ -z "$(echo $CLOUDFLARE_EMAIL | grep -P '(^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$)')" ]]; then
     read -rp "Cloudflare email: " -e -i "${CLOUDFLARE_EMAIL}" CLOUDFLARE_EMAIL
     if [[ -z "$(echo $CLOUDFLARE_EMAIL | grep -P '(^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$)')" ]]; then
-      print_answer "ERROR" red
-      echo ""
       echo "${COLOR_RED}$CLOUDFLARE_EMAIL${COLOR_RESET} - is not validate email"
       exit 1
     fi
@@ -122,8 +150,6 @@ install() {
   if [[ -z "$(echo $CLOUDFLARE_API_KEY | grep -P '(^.{37}$)')" ]]; then
     read -rp "Cloudflare API key: " -e -i "${CLOUDFLARE_API_KEY}" CLOUDFLARE_API_KEY
     if [[ -z "$(echo $CLOUDFLARE_API_KEY | grep -P '(^.{37}$)')" ]]; then
-      print_answer "ERROR" red
-      echo ""
       echo "${COLOR_RED}$CLOUDFLARE_API_KEY${COLOR_RESET} - is not validate API key"
       exit 1
     fi

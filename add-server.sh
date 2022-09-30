@@ -1,12 +1,17 @@
 #!/usr/bin/env sh
 
 # Copyright (c) 2022 Werbot, Inc.
-
+#
 # This is a simple script that can be downloaded and run from
 # https://install.werbot.com in order to add new server in the Werbot.
-
-# curl -sSL https://install.werbot.com/add-server.sh | sudo sh --token=token
-# wget -qO- https://install.werbot.com/add-server.sh | sudo sh --token=token
+#
+# Run commands:
+# curl -sSL https://install.werbot.com/add-server.sh | sudo sh -s -- --token=token 
+# wget -qO- https://install.werbot.com/add-server.sh | sudo sh -s -- --token=token
+#
+# Parameters:
+# --token - Project token to which you want to add a server
+# --api   - Server API if different from https://api.werbot.com
 
 # Main settings
 API_CDN="https://api.werbot.com"
