@@ -65,23 +65,21 @@ get_ip() {
   local IP=$(ip addr |
     egrep -o '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' |
     egrep -v "^192\.168|^172\.1[6-9]\.|^172\.2[0-9]\.|^172\.3[0-2]\.|^10\.|^127\.|^255\.|^0\." |
-    head -n 1)
-  [ -z ${IP} ] && IP=$(curl -s https://ipv4.icanhazip.com)
-  [ -z ${IP} ] && IP=$(curl -s https://ipinfo.io/ip)
-  [ -z ${IP} ] && IP=$(curl -s https://ipv6.icanhazip.com)
+    head -n 1) >/dev/null 2>&1
+  [ -z ${IP} ] && IP=$(curl -s ${API_CDN}/ip)
   echo ${IP}
 }
 
 install() {
   clear
-  echo "${COLOR_RED}                         _            _   "
-  echo "     _  _  _ _____  ____| |__   ___ _| |_ "
-  echo "    | || || | ___ |/ ___)  _ \ / _ (_   _)"
-  echo "    | || || | ____| |   | |_) ) |_| || |_ "
-  echo "     \_____/|_____)_|   |____/ \___/  \__)"
+  echo "${COLOR_RED}                        _            _   "
+  echo "    _  _  _ _____  ____| |__   ___ _| |_ "
+  echo "   | || || | ___ |/ ___)  _ \ / _ (_   _)"
+  echo "   | || || | ____| |   | |_) ) |_| || |_ "
+  echo "    \_____/|_____)_|   |____/ \___/  \__)"
   echo "${COLOR_RESET}"
   echo "          Install Enterprise version"
-  echo "------------------------------------------------"
+  echo "---------------------------------------------"
 
   echo ""
   echo "To begin the installation, you must set up DNS records"
@@ -102,8 +100,10 @@ install() {
   if [[ -z "$(echo $DOMAIN | grep -P '(?=^.{1,254}$)(^(?>(?!\d+\.)[a-zA-Z0-9_\-]{1,63}\.?)+(?:[a-zA-Z]{2,})$)')" ]]; then
     read -rp "Domain name: " -e -i "${DOMAIN}" DOMAIN
     if [[ -z "$(echo $DOMAIN | grep -P '(?=^.{1,254}$)(^(?>(?!\d+\.)[a-zA-Z0-9_\-]{1,63}\.?)+(?:[a-zA-Z]{2,})$)')" ]]; then
-      echo "${COLOR_RED}$DOMAIN is not validate domain${COLOR_RESET}"
-      exit
+      print_answer "ERROR" red
+      echo ""
+      echo "${COLOR_RED}$DOMAIN${COLOR_RESET} - is not validate domain"
+      exit 1
     fi
   fi
 
@@ -111,8 +111,10 @@ install() {
   if [[ -z "$(echo $CLOUDFLARE_EMAIL | grep -P '(^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$)')" ]]; then
     read -rp "Cloudflare email: " -e -i "${CLOUDFLARE_EMAIL}" CLOUDFLARE_EMAIL
     if [[ -z "$(echo $CLOUDFLARE_EMAIL | grep -P '(^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$)')" ]]; then
-      echo "${COLOR_RED}$CLOUDFLARE_EMAIL is not validate email${COLOR_RESET}"
-      exit
+      print_answer "ERROR" red
+      echo ""
+      echo "${COLOR_RED}$CLOUDFLARE_EMAIL${COLOR_RESET} - is not validate email"
+      exit 1
     fi
   fi
 
@@ -120,8 +122,10 @@ install() {
   if [[ -z "$(echo $CLOUDFLARE_API_KEY | grep -P '(^.{37}$)')" ]]; then
     read -rp "Cloudflare API key: " -e -i "${CLOUDFLARE_API_KEY}" CLOUDFLARE_API_KEY
     if [[ -z "$(echo $CLOUDFLARE_API_KEY | grep -P '(^.{37}$)')" ]]; then
-      echo "${COLOR_RED}$CLOUDFLARE_API_KEY is not validate API key${COLOR_RESET}"
-      exit
+      print_answer "ERROR" red
+      echo ""
+      echo "${COLOR_RED}$CLOUDFLARE_API_KEY${COLOR_RESET} - is not validate API key"
+      exit 1
     fi
   fi
 
@@ -132,7 +136,7 @@ install() {
   case "$OS" in
   Linux) OS=linux ;;
   Darwin) OS=darwin ;;
-  *) print_answer "NOT SUPPORTED" && exit 1 ;;
+  *) print_answer "NOT SUPPORTED" red && exit 1 ;;
   esac
   print_answer "SUCCESS" green
   # ------------------------------------------------
@@ -143,7 +147,7 @@ install() {
   CPU=$(uname -m)
   case "$CPU" in
   x86_64 | x86-64 | x64 | amd64) CPU=amd64 ;;
-  *) print_answer "NOT SUPPORTED" && exit 1 ;;
+  *) print_answer "NOT SUPPORTED" red && exit 1 ;;
   esac
   print_answer "SUCCESS" green
   # ------------------------------------------------
