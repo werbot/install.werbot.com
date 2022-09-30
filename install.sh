@@ -7,8 +7,8 @@
 # command-line tools and all Werbot components.
 #
 # Run commands:
-# bash <(curl -L -Ss https://install.werbot.com)
-# bash <(wget -qO- https://install.werbot.com)
+# bash <(curl -L -Ss https://install.werbot.com) --domain=domain.com
+# bash <(wget -qO- https://install.werbot.com) --domain=domain.com
 #
 # Parameters:
 # --domain     - Main domain for work project. For this domain.

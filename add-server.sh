@@ -6,8 +6,8 @@
 # https://install.werbot.com in order to add new server in the Werbot.
 #
 # Run commands:
-# curl -sSL https://install.werbot.com/add-server.sh | sudo sh -s -- --token=token
-# wget -qO- https://install.werbot.com/add-server.sh | sudo sh -s -- --token=token
+# curl -sSL https://install.werbot.com/add-server | sudo sh -s -- --token=token
+# wget -qO- https://install.werbot.com/add-server | sudo sh -s -- --token=token
 #
 # Parameters:
 # --token - Project token to which you want to add a server
@@ -151,8 +151,30 @@ install() {
     port="22"
   fi
 
-  # TODO send request to api
+  json_request=$(curl -X POST -s ${API_CDN}/v1/service/server \
+    -H "Content-Type: application/json" \
+    -H "token: $PROJECT_TOKEN" \
+    -d "{\"port\":$port, \"login\":"\"$USER\"", \"scheme\":\"ssh\", \"address\":"\"$ip\""}")
+
+  if [ ! "$(echo "$json_request" | grep -Po '"success":"\K[^"]*')" ]; then
+    print_answer "ERROR" red
+    echo ""
+    echo "$json_request" | grep -Po '"message":"\K[^"]*'
+    exit 1
+  fi
+
   # TODO add key to ssh and restart ssh
+  key=$(echo "$json_request" | grep -Po '"data":"\K[^"]*')
+  if [ -z "$key" ]; then
+    print_answer "ERROR" red
+    exit 1
+  fi
+
+  echo "" >>$HOME/.ssh/authorized_keys
+  echo "# start werbot key" >>$HOME/.ssh/authorized_keys
+  echo $(echo "$JSON" | grep -Po '"key":"\K[^"]*') >>$HOME/.ssh/authorized_keys
+  echo "# stop werbot key" >>$HOME/.ssh/authorized_keys
+  echo "" >>$HOME/.ssh/authorized_keys
 
   print_answer "SUCCESS" green
   # ------------------------------------------------
