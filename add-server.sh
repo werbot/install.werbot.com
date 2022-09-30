@@ -6,7 +6,7 @@
 # https://install.werbot.com in order to add new server in the Werbot.
 #
 # Run commands:
-# curl -sSL https://install.werbot.com/add-server.sh | sudo sh -s -- --token=token 
+# curl -sSL https://install.werbot.com/add-server.sh | sudo sh -s -- --token=token
 # wget -qO- https://install.werbot.com/add-server.sh | sudo sh -s -- --token=token
 #
 # Parameters:
@@ -28,6 +28,14 @@ if [ "$(id -u)" -ne 0 ]; then
   echo "This script must be executed with root privileges."
   exit 1
 fi
+
+case "$(uname -s)" in
+"Darwin" | "Windows")
+  echo "This script does not support the OS/Distribution on this machine."
+  echo "If you feel that this is an error contact support@werbot.com"
+  exit 1
+  ;;
+esac
 
 print_answer() {
   local COLOR="$COLOR_RESET"

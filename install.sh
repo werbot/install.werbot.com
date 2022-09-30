@@ -11,7 +11,7 @@
 # bash <(wget -qO- https://install.werbot.com)
 #
 # Parameters:
-# --domain     - Main domain for work project. For this domain. 
+# --domain     - Main domain for work project. For this domain.
 #                You need to create DNS records CNAME type for subdomain "api" and "app"
 # --geolite    - Link to update the GeoLite2-Country database
 # --cf-email   - Cloudflare email
@@ -21,6 +21,14 @@ if readlink /proc/$$/exe | grep -q "dash"; then
   echo 'This installer needs to be run with "bash", not "sh".'
   exit
 fi
+
+case "$(uname -s)" in
+"Windows")
+  echo "This script does not support the OS/Distribution on this machine."
+  echo "If you feel that this is an error contact support@werbot.com"
+  exit 1
+  ;;
+esac
 
 # Main settings
 APP_CDN="https://app.werbot.com"
@@ -131,7 +139,7 @@ install() {
 
   # Domain parameters
   if [[ -z "$(echo $DOMAIN | grep -P '(?=^.{1,254}$)(^(?>(?!\d+\.)[a-zA-Z0-9_\-]{1,63}\.?)+(?:[a-zA-Z]{2,})$)')" ]]; then
-    read -rp "Domain name: " -i "${DOMAIN}" DOMAIN
+    read -rp "Domain name: " -e -i "$DOMAIN" DOMAIN
     if [[ -z "$(echo $DOMAIN | grep -P '(?=^.{1,254}$)(^(?>(?!\d+\.)[a-zA-Z0-9_\-]{1,63}\.?)+(?:[a-zA-Z]{2,})$)')" ]]; then
       echo "${COLOR_RED}$DOMAIN${COLOR_RESET} - is not validate domain"
       exit 1
