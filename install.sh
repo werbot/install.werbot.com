@@ -22,14 +22,6 @@ if readlink /proc/$$/exe | grep -q "dash"; then
   exit
 fi
 
-case "$(uname -s)" in
-"Windows")
-  echo "This script does not support the OS/Distribution on this machine."
-  echo "If you feel that this is an error contact support@werbot.com"
-  exit 1
-  ;;
-esac
-
 # Main settings
 APP_CDN="https://app.werbot.com"
 LICENSE_CDN="https://license.werbot.com"
@@ -174,7 +166,6 @@ install() {
   OS=$(uname -s)
   case "$OS" in
   Linux) OS=linux ;;
-  Darwin) OS=darwin ;;
   *) print_answer "NOT SUPPORTED" red && exit 1 ;;
   esac
   print_answer "SUCCESS" green
@@ -196,12 +187,8 @@ install() {
   command_exists jq || {
     print_answer "NEED INSTALLATION" yellow
     print_header "Installing jq"
-    if [ "$OS" = darwin ]; then
-      brew install jq >/dev/null 2>&1
-    elif [ "$OS" = linux ]; then
-      sudo curl -L https://github.com/stedolan/jq/releases/download/$(get_latest_release "stedolan/jq")/jq-linux64 -o /usr/local/bin/jq >/dev/null 2>&1
-      sudo chmod +x /usr/local/bin/jq
-    fi
+    sudo curl -L https://github.com/stedolan/jq/releases/download/$(get_latest_release "stedolan/jq")/jq-linux64 -o /usr/local/bin/jq >/dev/null 2>&1
+    sudo chmod +x /usr/local/bin/jq
     command_exists jq || {
       print_answer "ERROR" red && exit 1
     }
@@ -214,11 +201,7 @@ install() {
   command_exists docker || {
     print_answer "NEED INSTALLATION" yellow
     print_header "Installing docker"
-    if [ "$OS" = darwin ]; then
-      brew install docker >/dev/null 2>&1
-    elif [ "$OS" = linux ]; then
-      curl -sSf https://get.docker.com | sh >/dev/null 2>&1
-    fi
+    curl -sSf https://get.docker.com | sh >/dev/null 2>&1
     command_exists docker || {
       print_answer "ERROR" red && exit 1
     }
@@ -231,12 +214,8 @@ install() {
   command_exists docker-compose || {
     print_answer "NEED INSTALLATION" yellow
     print_header "Installing docker-compose"
-    if [ "$OS" = darwin ]; then
-      brew install docker-compose >/dev/null 2>&1
-    elif [ "$OS" = linux ]; then
-      sudo curl -L https://github.com/docker/compose/releases/download/$(get_latest_release "docker/compose")/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose >/dev/null 2>&1
-      sudo chmod +x /usr/local/bin/docker-compose
-    fi
+    sudo curl -L https://github.com/docker/compose/releases/download/$(get_latest_release "docker/compose")/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose >/dev/null 2>&1
+    sudo chmod +x /usr/local/bin/docker-compose
     command_exists docker-compose command_exists || {
       print_answer "ERROR" red && exit 1
     }
