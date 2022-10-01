@@ -33,6 +33,7 @@ esac
 # Main settings
 APP_CDN="https://app.werbot.com"
 LICENSE_CDN="https://license.werbot.com"
+WERBOT_DIR="/home/werbot"
 
 # Service settings
 DOMAIN=""
@@ -138,27 +139,30 @@ install() {
   esac
 
   # Domain parameters
-  if [[ -z "$(echo $DOMAIN | grep -P '(?=^.{1,254}$)(^(?>(?!\d+\.)[a-zA-Z0-9_\-]{1,63}\.?)+(?:[a-zA-Z]{2,})$)')" ]]; then
+  domain_regex='(?=^.{1,254}$)(^(?>(?!\d+\.)[a-zA-Z0-9_\-]{1,63}\.?)+(?:[a-zA-Z]{2,})$)'
+  if [[ -z "$(echo $DOMAIN | grep -P $domain_regex)" ]]; then
     read -rp "Domain name: " -e -i "$DOMAIN" DOMAIN
-    if [[ -z "$(echo $DOMAIN | grep -P '(?=^.{1,254}$)(^(?>(?!\d+\.)[a-zA-Z0-9_\-]{1,63}\.?)+(?:[a-zA-Z]{2,})$)')" ]]; then
+    if [[ -z "$(echo $DOMAIN | grep -P $domain_regex)" ]]; then
       echo "${COLOR_RED}$DOMAIN${COLOR_RESET} - is not validate domain"
       exit 1
     fi
   fi
 
   # Cloudflare email parameters
-  if [[ -z "$(echo $CLOUDFLARE_EMAIL | grep -P '(^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$)')" ]]; then
+  cf_email_regex='(^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$)'
+  if [[ -z "$(echo $CLOUDFLARE_EMAIL | grep -P $cf_email_regex)" ]]; then
     read -rp "Cloudflare email: " -e -i "${CLOUDFLARE_EMAIL}" CLOUDFLARE_EMAIL
-    if [[ -z "$(echo $CLOUDFLARE_EMAIL | grep -P '(^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$)')" ]]; then
+    if [[ -z "$(echo $CLOUDFLARE_EMAIL | grep -P $cf_email_regex)" ]]; then
       echo "${COLOR_RED}$CLOUDFLARE_EMAIL${COLOR_RESET} - is not validate email"
       exit 1
     fi
   fi
 
   # Cloudflare API key parameters
-  if [[ -z "$(echo $CLOUDFLARE_API_KEY | grep -P '(^.{37}$)')" ]]; then
+  cf_api_key_regex='(^.{37}$)'
+  if [[ -z "$(echo $CLOUDFLARE_API_KEY | grep -P $cf_api_key_regex)" ]]; then
     read -rp "Cloudflare API key: " -e -i "${CLOUDFLARE_API_KEY}" CLOUDFLARE_API_KEY
-    if [[ -z "$(echo $CLOUDFLARE_API_KEY | grep -P '(^.{37}$)')" ]]; then
+    if [[ -z "$(echo $CLOUDFLARE_API_KEY | grep -P $cf_api_key_regex)" ]]; then
       echo "${COLOR_RED}$CLOUDFLARE_API_KEY${COLOR_RESET} - is not validate API key"
       exit 1
     fi
@@ -243,7 +247,7 @@ install() {
   # Create new user
   if ! getent passwd werbot >/dev/null; then
     print_header "Adding a new werbot user"
-    sudo useradd -m -d /home/werbot werbot -s /bin/bash
+    sudo useradd -m -d $WERBOT_DIR werbot -s /bin/bash
     echo "werbot ALL=(ALL) NOPASSWD:ALL" | sudo tee -a /etc/sudoers.d/werbot >/dev/null 2>&1
     sudo chmod 0440 /etc/sudoers.d/werbot
     sudo usermod -a -G sudo werbot
@@ -257,41 +261,41 @@ install() {
   # Create structure service
   print_header "Create structure service"
 
-  sudo su - werbot -c "git clone https://github.com/werbot/install.werbot.com.git /home/werbot/service/tmp" >/dev/null 2>&1
-  sudo su - werbot -c "mv /home/werbot/service/tmp/cfg/grafana /home/werbot/service/grafana" >/dev/null 2>&1
-  sudo su - werbot -c "mv /home/werbot/service/tmp/cfg/haproxy /home/werbot/service/haproxy" >/dev/null 2>&1
-  sudo su - werbot -c "mv /home/werbot/service/tmp/cfg/loki /home/werbot/service/loki" >/dev/null 2>&1
-  sudo su - werbot -c "mv /home/werbot/service/tmp/cfg/prometheus /home/werbot/service/prometheus" >/dev/null 2>&1
-  sudo su - werbot -c "mv /home/werbot/service/tmp/cfg/promtail /home/werbot/service/promtail" >/dev/null 2>&1
+  sudo su - werbot -c "git clone https://github.com/werbot/install.werbot.com.git $WERBOT_DIR/service/tmp" >/dev/null 2>&1
+  sudo su - werbot -c "mv $WERBOT_DIR/service/tmp/cfg/grafana $WERBOT_DIR/service/grafana" >/dev/null 2>&1
+  sudo su - werbot -c "mv $WERBOT_DIR/service/tmp/cfg/haproxy $WERBOT_DIR/service/haproxy" >/dev/null 2>&1
+  sudo su - werbot -c "mv $WERBOT_DIR/service/tmp/cfg/loki $WERBOT_DIR/service/loki" >/dev/null 2>&1
+  sudo su - werbot -c "mv $WERBOT_DIR/service/tmp/cfg/prometheus $WERBOT_DIR/service/prometheus" >/dev/null 2>&1
+  sudo su - werbot -c "mv $WERBOT_DIR/service/tmp/cfg/promtail $WERBOT_DIR/service/promtail" >/dev/null 2>&1
 
-  sudo su - werbot -c "mkdir -p /home/werbot/service/{core,postgres,postgres/ca}"
+  sudo su - werbot -c "mkdir -p $WERBOT_DIR/service/{core,postgres,postgres/ca}"
 
-  sudo su - werbot -c "cd /home/werbot/service/postgres/ca/
+  sudo su - werbot -c "cd $WERBOT_DIR/service/postgres/ca/
     openssl req -new -text -passout pass:abcd -subj /CN=Werbot -out server.req -keyout privkey.pem
     openssl rsa -in privkey.pem -passin pass:abcd -out server.key
     openssl req -x509 -in server.req -text -key server.key -out server.crt
     chmod 600 server.key
     sudo chown 70 server.key" >/dev/null 2>&1
 
-  sudo su - werbot -c "ssh-keygen -q -t rsa -b 4096 -N '' -f /home/werbot/service/core/server_key <<<y
-    rm /home/werbot/service/core/server_key.pub
-    chmod 664 /home/werbot/service/core/server_key" >/dev/null 2>&1
+  sudo su - werbot -c "ssh-keygen -q -t rsa -b 4096 -N '' -f $WERBOT_DIR/service/core/server_key <<<y
+    rm $WERBOT_DIR/service/core/server_key.pub
+    chmod 664 $WERBOT_DIR/service/core/server_key" >/dev/null 2>&1
 
-  # TODO: create /home/werbot/service/.env
+  # TODO: create $WERBOT_DIR/service/.env
 
-  sudo su - werbot -c "curl -s -o /home/werbot/service/core/GeoLite2-Country.mmdb $GEOLITE_DATABASE"
+  sudo su - werbot -c "curl -s -o $WERBOT_DIR/service/core/GeoLite2-Country.mmdb $GEOLITE_DATABASE"
 
-  # TODO: update domain /home/werbot/service/haproxy/config.cfg
-  # TODO: download /home/werbot/service/docker-compose.yaml
+  # TODO: update domain $WERBOT_DIR/service/haproxy/config.cfg
+  # TODO: download $WERBOT_DIR/service/docker-compose.yaml
 
-  sudo chown 10001:10001 /home/werbot/service/core/
-  sudo rm -rf /home/werbot/service/tmp
+  sudo chown 10001:10001 $WERBOT_DIR/service/core/
+  sudo rm -rf $WERBOT_DIR/service/tmp
   print_answer "SUCCESS" green
   # ------------------------------------------------
 
   # Pulling docker containers (~2min)
   print_header "Pulling docker containers (~2min)"
-  # docker-compose -f /home/werbot/service/docker-compose.yaml pull >/dev/null 2>&1
+  # docker-compose -f $WERBOT_DIR/service/docker-compose.yaml pull >/dev/null 2>&1
   print_answer "SUCCESS" green
   # ------------------------------------------------
 
