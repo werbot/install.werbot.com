@@ -16,6 +16,7 @@ dist: ## Create dist
 	@mkdir -p $(ROOT_PATH)/dist $(ROOT_PATH)/tmp
 	@cp $(ROOT_PATH)/install.sh $(ROOT_PATH)/dist/index.html
 	@cp $(ROOT_PATH)/add-server.sh $(ROOT_PATH)/dist/add-server.html
+	@cp $(ROOT_PATH)/version.json $(ROOT_PATH)/dist/version.json
 	@curl "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-Country&license_key=$(GEOLITE_LICENSE)&suffix=tar.gz" | tar -zx -C $(ROOT_PATH)/tmp
 	@cp $(ROOT_PATH)/tmp/$$(ls $(ROOT_PATH)/tmp/ | head -n 1)/*.mmdb $(ROOT_PATH)/dist/GeoLite2-Country.mmdb
 	@echo -e "User-agent: *" >>$(ROOT_PATH)/dist/robots.txt

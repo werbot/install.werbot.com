@@ -119,7 +119,7 @@ install() {
 
   # Verifying project token
   print_header "Verifying project token"
-  if [ -z "$(echo ${PROJECT_TOKEN} | grep -P '(^.{5}$)')" ]; then
+  if [ -z "$(echo ${PROJECT_TOKEN} | grep -P '(^.{37}$)')" ]; then
     print_answer "ERROR" red
     echo ""
     echo "${COLOR_RED}$PROJECT_TOKEN${COLOR_RESET} - is not validate project token"
